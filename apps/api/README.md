@@ -25,7 +25,17 @@ Simple Express API for geocoding CSV uploads.
    ```bash
    # Create .env file in apps/api/
    echo "MAPBOX_TOKEN=your_mapbox_token_here" > .env
+   echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/geocode" >> .env
+   echo "CORS_ORIGIN=http://localhost:5173" >> .env
    ```
+
+**Important:** The server will fail to start if `MAPBOX_TOKEN` or `DATABASE_URL` is not set.
+
+**DATABASE_URL:** Required. Format: `postgresql://user:password@host:port/database`
+- Local dev example: `postgresql://postgres:postgres@localhost:5432/geocode`
+- Production: Set to your database connection string (e.g., from Render, Railway, etc.)
+
+**CORS_ORIGIN:** Optional. Defaults to `http://localhost:5173` for local development. Set to your deployed frontend URL when deploying.
 
 4. **Install dependencies and start:**
    ```bash

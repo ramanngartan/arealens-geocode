@@ -26,14 +26,33 @@ app.use(cors({
 }))
 app.use(express.json())
 
-// Database connection
-const pool = new Pool({
-  host: 'localhost',
-  port: 5432,
-  database: 'geocode',
-  user: 'postgres',
-  password: 'postgres'
-})
+// Database connection - must use DATABASE_URL
+const DATABASE_URL = process.env.DATABASE_URL
+if (!DATABASE_URL) {
+  console.error('ERROR: DATABASE_URL environment variable is required')
+  process.exit(1)
+}
+
+// Parse DATABASE_URL (format: postgresql://user:password@host:port/database)
+let dbConfig
+try {
+  const url = new URL(DATABASE_URL)
+  dbConfig = {
+    host: url.hostname,
+    port: parseInt(url.port) || 5432,
+    database: url.pathname.slice(1), // Remove leading '/'
+    user: url.username,
+    password: url.password
+  }
+  
+  // Log connection info (no password)
+  console.log(`Database connection: ${dbConfig.user}@${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`)
+} catch (error) {
+  console.error('ERROR: Invalid DATABASE_URL format:', error.message)
+  process.exit(1)
+}
+
+const pool = new Pool(dbConfig)
 
 // Configure multer for file uploads (memory storage)
 const upload = multer({
