@@ -203,6 +203,16 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
 // Helper function to reverse geocode a location (area-style labels only)
 async function reverseGeocode(lat, lng) {
+  // Validate coordinates are finite numbers
+  if (typeof lat !== 'number' || typeof lng !== 'number' || !isFinite(lat) || !isFinite(lng)) {
+    return `Near ${lat}, ${lng}`
+  }
+  
+  // Validate coordinate ranges
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    return `Near ${lat.toFixed(5)}, ${lng.toFixed(5)}`
+  }
+  
   try {
     // Request multiple results to find best area-type match
     const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&limit=5`
@@ -235,22 +245,22 @@ async function reverseGeocode(lat, lng) {
           } else if (region && placeName !== region) {
             return `${placeName} / ${region}`
           }
-          return placeName || feature.place_name?.split(',')[0] || `${lat.toFixed(2)}, ${lng.toFixed(2)}`
+          return placeName || feature.place_name?.split(',')[0] || `Near ${lat.toFixed(5)}, ${lng.toFixed(5)}`
         }
       }
       
       // Fallback: use first feature's text if it's not an address
       const firstFeature = data.features[0]
       if (!firstFeature.place_type?.includes('address')) {
-        return firstFeature.text || `${lat.toFixed(2)}, ${lng.toFixed(2)}`
+        return firstFeature.text || `Near ${lat.toFixed(5)}, ${lng.toFixed(5)}`
       }
     }
     
     // Final fallback
-    return `Near ${lat.toFixed(2)}, ${lng.toFixed(2)}`
+    return `Near ${lat.toFixed(5)}, ${lng.toFixed(5)}`
   } catch (error) {
-    console.error('Reverse geocode error:', error)
-    return `Near ${lat.toFixed(2)}, ${lng.toFixed(2)}`
+    console.warn(`Reverse geocode error for ${lat.toFixed(5)}, ${lng.toFixed(5)}:`, error.message)
+    return `Near ${lat.toFixed(5)}, ${lng.toFixed(5)}`
   }
 }
 
@@ -407,11 +417,12 @@ app.get('/api/uploads/:id/insights', async (req, res) => {
       [uploadId]
     )
 
-    // Reverse geocode cache to avoid duplicate calls
+    // Reverse geocode cache to avoid duplicate calls (dedupe by rounded coordinates)
     const geocodeCache = new Map()
     
     const getLabel = async (lat, lng) => {
-      const key = `${lat.toFixed(2)},${lng.toFixed(2)}`
+      // Use 5 decimal places for cache key (~1m precision)
+      const key = `${parseFloat(lat).toFixed(5)},${parseFloat(lng).toFixed(5)}`
       if (geocodeCache.has(key)) {
         return geocodeCache.get(key)
       }
