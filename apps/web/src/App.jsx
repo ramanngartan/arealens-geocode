@@ -6,14 +6,37 @@ import html2canvas from 'html2canvas'
 // Get API base URL from environment or default to localhost
 const getApiBaseUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL
+  
+  // In development mode, prefer localhost unless explicitly set
+  // This ensures local dev works even if VITE_API_URL points to deployed API
+  if (import.meta.env.DEV) {
+    // If no env var set, use localhost
+    if (!envUrl) {
+      return 'http://localhost:3000'
+    }
+    // If env var is set but points to localhost, use it
+    if (envUrl.includes('localhost') || envUrl.includes('127.0.0.1')) {
+      return envUrl.replace(/\/$/, '')
+    }
+    // If env var points to deployed API, still use localhost for local dev
+    // (user can override by explicitly setting VITE_API_URL in .env.local)
+    return 'http://localhost:3000'
+  }
+  
+  // In production, use env var or default to localhost (shouldn't happen)
   if (envUrl) {
-    // Remove trailing slash if present
     return envUrl.replace(/\/$/, '')
   }
   return 'http://localhost:3000'
 }
 
 const API_BASE = getApiBaseUrl()
+
+// Log API base URL in development (helpful for debugging)
+if (import.meta.env.DEV) {
+  console.log('API Base URL:', API_BASE)
+  console.log('VITE_API_URL env var:', import.meta.env.VITE_API_URL || '(not set)')
+}
 
 function App() {
   const mapContainer = useRef(null)
@@ -304,8 +327,12 @@ function App() {
       setStatus('uploaded')
     } catch (error) {
       console.error('Upload error:', error)
+      let errorMessage = error.message
+      if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
+        errorMessage = `Cannot connect to API at ${API_BASE}. Make sure the API server is running.`
+      }
       setStatus('error')
-      alert(`Upload failed: ${error.message}`)
+      alert(`Upload failed: ${errorMessage}`)
     }
   }
 
