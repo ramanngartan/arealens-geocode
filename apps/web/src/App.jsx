@@ -3,7 +3,17 @@ import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import html2canvas from 'html2canvas'
 
-const API_URL = 'http://localhost:3000'
+// Get API base URL from environment or default to localhost
+const getApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL
+  if (envUrl) {
+    // Remove trailing slash if present
+    return envUrl.replace(/\/$/, '')
+  }
+  return 'http://localhost:3000'
+}
+
+const API_BASE = getApiBaseUrl()
 
 function App() {
   const mapContainer = useRef(null)
@@ -274,7 +284,7 @@ function App() {
 
     try {
       setStatus('uploaded')
-      const response = await fetch(`${API_URL}/api/upload`, {
+      const response = await fetch(`${API_BASE}/api/upload`, {
         method: 'POST',
         body: formData
       })
@@ -304,7 +314,7 @@ function App() {
 
     try {
       setStatus('processing')
-      const response = await fetch(`${API_URL}/api/uploads/${uploadId}/geocode`, {
+      const response = await fetch(`${API_BASE}/api/uploads/${uploadId}/geocode`, {
         method: 'POST'
       })
 
@@ -315,12 +325,12 @@ function App() {
       // Poll for completion
       const pollInterval = setInterval(async () => {
         try {
-          const statusResponse = await fetch(`${API_URL}/api/uploads/${uploadId}/points`)
+          const statusResponse = await fetch(`${API_BASE}/api/uploads/${uploadId}/points`)
           if (statusResponse.ok) {
             const pointsData = await statusResponse.json()
             
             // Check upload status
-            const uploadResponse = await fetch(`${API_URL}/api/uploads/${uploadId}`)
+            const uploadResponse = await fetch(`${API_BASE}/api/uploads/${uploadId}`)
             if (uploadResponse.ok) {
               const uploadData = await uploadResponse.json()
               
@@ -352,7 +362,7 @@ function App() {
 
   const fetchInsights = async (id) => {
     try {
-      const response = await fetch(`${API_URL}/api/uploads/${id}/insights`)
+      const response = await fetch(`${API_BASE}/api/uploads/${id}/insights`)
       if (response.ok) {
         const data = await response.json()
         setInsights(data)

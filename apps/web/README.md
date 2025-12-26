@@ -14,8 +14,11 @@ React + Vite frontend for geocoding CSV uploads with Mapbox visualization.
    ```bash
    # Create .env file in apps/web/
    echo "VITE_MAPBOX_TOKEN=your_mapbox_token_here" > .env
+   echo "VITE_API_URL=http://localhost:3000" >> .env
    ```
-   Note: Use a public Mapbox token (starts with `pk.`) for client-side use.
+   Note: 
+   - Use a public Mapbox token (starts with `pk.`) for client-side use.
+   - `VITE_API_URL` is optional and defaults to `http://localhost:3000` if not set.
 
 2. **Install dependencies and start:**
    ```bash
