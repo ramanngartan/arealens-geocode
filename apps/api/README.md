@@ -45,9 +45,12 @@ npm install
 2. Create `.env` file in `apps/api/` with your Mapbox token:
 ```bash
 MAPBOX_TOKEN=your_mapbox_token_here
+CORS_ORIGIN=http://localhost:5173
 ```
 
 **Important:** The server will fail to start if `MAPBOX_TOKEN` is not set.
+
+**CORS_ORIGIN:** Optional. Defaults to `http://localhost:5173` for local development. Set to your deployed frontend URL (e.g., `https://your-app.onrender.com`) when deploying.
 
 3. Ensure Postgres is running:
 ```bash

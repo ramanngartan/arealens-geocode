@@ -16,7 +16,14 @@ if (!MAPBOX_TOKEN) {
   process.exit(1)
 }
 
-app.use(cors())
+// CORS configuration
+const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173'
+app.use(cors({
+  origin: CORS_ORIGIN,
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}))
 app.use(express.json())
 
 // Database connection
