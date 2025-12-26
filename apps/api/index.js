@@ -214,49 +214,26 @@ async function reverseGeocode(lat, lng) {
   }
   
   try {
-    // Request multiple results to find best area-type match
-    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&limit=5`
+    // Simplest valid request: only access_token and limit=1
+    // Coordinate order: {lng},{lat}
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&limit=1`
     const response = await fetch(url)
     
     if (!response.ok) {
-      throw new Error(`Mapbox API error: ${response.status}`)
+      // Log status and response body text once, then return fallback (no throw)
+      const responseText = await response.text()
+      console.warn(`Reverse geocode non-200 for ${lat.toFixed(5)}, ${lng.toFixed(5)}: status ${response.status}, body: ${responseText}`)
+      return `Near ${lat.toFixed(5)}, ${lng.toFixed(5)}`
     }
     
     const data = await response.json()
     
-    if (data.features && data.features.length > 0) {
-      // Priority order: neighborhood, locality, place, district, region
-      const priorityTypes = ['neighborhood', 'locality', 'place', 'district', 'region']
-      
-      // Find first feature matching priority types
-      for (const type of priorityTypes) {
-        const feature = data.features.find(f => 
-          f.place_type && f.place_type.includes(type)
-        )
-        if (feature) {
-          // Return a clean area label (no street addresses)
-          const context = feature.context || []
-          const placeName = feature.text
-          const locality = context.find(c => c.id?.startsWith('locality'))?.text
-          const region = context.find(c => c.id?.startsWith('region'))?.text
-          
-          if (locality && placeName !== locality) {
-            return `${placeName} / ${locality}`
-          } else if (region && placeName !== region) {
-            return `${placeName} / ${region}`
-          }
-          return placeName || feature.place_name?.split(',')[0] || `Near ${lat.toFixed(5)}, ${lng.toFixed(5)}`
-        }
-      }
-      
-      // Fallback: use first feature's text if it's not an address
-      const firstFeature = data.features[0]
-      if (!firstFeature.place_type?.includes('address')) {
-        return firstFeature.text || `Near ${lat.toFixed(5)}, ${lng.toFixed(5)}`
-      }
+    // Parse label from features[0].place_name if exists
+    if (data.features && data.features.length > 0 && data.features[0].place_name) {
+      return data.features[0].place_name
     }
     
-    // Final fallback
+    // Fallback if no place_name
     return `Near ${lat.toFixed(5)}, ${lng.toFixed(5)}`
   } catch (error) {
     console.warn(`Reverse geocode error for ${lat.toFixed(5)}, ${lng.toFixed(5)}:`, error.message)
