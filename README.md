@@ -1,6 +1,21 @@
 # AreaLens
 
-AreaLens is a spatial analytics tool that helps local service businesses understand their customer distribution by converting CSV address data into interactive maps and actionable insights. The tool processes CSV files containing customer addresses, geocodes them using Mapbox, visualizes the data on an interactive map with point and heatmap views, and generates insights about customer concentration and potential expansion opportunities.
+AreaLens is a spatial analytics tool that helps local service businesses understand their customer distribution by converting CSV address data into interactive maps and actionable insights.
+
+## Live Demo
+
+**App:** https://arealens-geocode-1.onrender.com/
+
+**API health:** https://arealens-geocode.onrender.com/health
+
+## Demo Flow (2 minutes)
+
+1. Open the app
+2. Upload `test.csv` (located in `arealens/` folder)
+3. Click Run Geocode
+4. Toggle Heatmap
+5. Open Insights and click an area to highlight
+6. Export PNG
 
 ## What This MVP Intentionally Does NOT Do
 
@@ -52,7 +67,7 @@ This MVP is intentionally limited in scope. It does not include:
 
 1. **Start PostgreSQL database:**
    ```bash
-   docker compose -f infra/docker-compose.yml up -d
+   docker compose -f arealens/infra/docker-compose.yml up -d
    ```
 
 2. **Apply database migrations:**
@@ -64,7 +79,7 @@ This MVP is intentionally limited in scope. It does not include:
    ```bash
    cd arealens/apps/api
    npm install
-   # Create .env file with: MAPBOX_TOKEN=your_secret_token
+   # Create .env file with: MAPBOX_TOKEN=your_secret_token, DATABASE_URL=postgresql://postgres:postgres@localhost:5432/geocode
    npm run dev
    ```
    API runs on `http://localhost:3000`
@@ -110,6 +125,14 @@ street,city,postal,service_type,customer_count,revenue_bucket
 123 Main St,San Francisco,94102,restaurant,50,high
 456 Oak Ave,Los Angeles,90001,retail,25,medium
 ```
+
+## Troubleshooting
+
+- **Frontend loads but upload fails (500):** API cannot reach DB (check Render API logs, DATABASE_URL pooler :6543, schema exists).
+- **CORS error in browser:** CORS_ORIGIN on API must exactly match the frontend URL.
+- **Map is blank:** missing/invalid VITE_MAPBOX_TOKEN (frontend env var).
+- **Geocoding doesn't run:** missing/invalid MAPBOX_TOKEN on API.
+- **Cold start:** Render free web service may sleep; first request can be slow.
 
 ## Project Status
 
